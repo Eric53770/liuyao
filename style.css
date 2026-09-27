@@ -33,3 +33,11 @@
 @media(max-width:400px){
  header{padding:0 14px}.brand{gap:10px;letter-spacing:2px}.brand small{margin-left:6px;letter-spacing:1px}main{padding:20px 12px}.intro h1{font-size:23px;letter-spacing:1px}.calendar{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pillar:nth-child(2){border-right:0}.pillar:nth-child(3),.pillar:nth-child(4){border-top:1px solid #ffffff20;padding-top:8px}.calendar-meta,.rollover-note{grid-column:1/-1}.plate-heading h2{font-size:21px}.legend{font-size:12px;gap:8px 14px}.reference{padding:16px 12px}
 }
+
+/* Keep the native datetime control inside its field on mobile Safari. */
+#when{display:block;max-width:100%;min-width:0}
+@media(max-width:760px){
+ #when{-webkit-appearance:none;appearance:none;text-align:left}
+ #when::-webkit-date-and-time-value{text-align:left;margin:0}
+ #when::-webkit-calendar-picker-indicator{margin-left:auto}
+}
