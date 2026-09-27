@@ -1,5 +1,5 @@
 (function(){
-  const {calendar,plate,randomCast,ST,ZE,E,kin,relation}=LY;
+  const {calendar,plate,randomCast,Z,ST,ZE,E,kin,relation}=LY;
   const inputRoot=document.querySelector('#inputs');
   const values=[7,8,7,8,7,8];
   const options=[[6,'老陰'],[7,'少陽'],[8,'少陰'],[9,'老陽']];
