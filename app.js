@@ -1,68 +1,62 @@
-const $=id=>document.getElementById(id),{Z,E,ZE,ST,HEX,phase,calendar,plate,generates,controls,clash,combine,relation}=LY;
-const POS=['初爻','二爻','三爻','四爻','五爻','上爻'];let current;
-let tableFitFrame=0;
-function fitTables(){
-  tableFitFrame=0;
-  document.querySelectorAll('.plate-panel>.table-wrap,.reference>.table-wrap').forEach(wrap=>{
-    const table=wrap.querySelector('table');
-    if(!table)return;
-    // Keep the fitting rules with the fitting code, including when an older
-    // style.css is still cached. An unscaled table must not size its wrapper.
-    Object.assign(wrap.style,{position:'relative',minWidth:'0',maxWidth:'100%',overflow:'hidden'});
-    Object.assign(table.style,{position:'absolute',left:'0',top:'0',margin:'0',transformOrigin:'top left',transform:'none'});
-    const available=wrap.clientWidth;
-    if(available<=0)return;
-    table.style.width=Math.max(660,available)+'px';
-    // offset/scroll dimensions are unscaled; measure again after every render.
-    const naturalWidth=Math.max(table.offsetWidth,table.scrollWidth);
-    if(naturalWidth<=0)return;
-    const scale=Math.min(1,available/naturalWidth);
-    table.style.transform=scale<1?`scale(${scale})`:'none';
-    wrap.style.height=Math.ceil(Math.max(table.offsetHeight,table.scrollHeight)*scale)+'px';
-    wrap.scrollLeft=0;
-    wrap.scrollTop=0;
-  });
-}
-function scheduleTableFit(){
-  if(!tableFitFrame)tableFitFrame=requestAnimationFrame(fitTables);
-}
-$('inputs').innerHTML=[5,4,3,2,1,0].map(i=>`<div class="line-input"><label for="line${i}">${POS[i]}</label><select id="line${i}"><option value="7">7　少陽 ━　靜爻</option><option value="8">8　少陰 ⚋　靜爻</option><option value="9">9　老陽　動爻</option><option value="6">6　老陰　動爻</option></select></div>`).join('');
-function now(){let parts=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());$('when').value=parts.replace(' ','T');}
-const tag=t=>`<span class="tag ${['世','應'].includes(t)?'key':/空|破|墓/.test(t)?'warn':''}">${t}</span>`;
-const glyph=(yang,active=false)=>`<span class="glyph ${yang?'':'yin'} ${active?'active':''}" aria-label="${yang?'陽':'陰'}爻"></span>`;
-const desc=r=>`${r.kin} ${r.gan}${Z[r.z]}${E[r.e]}`;
-function render(){try{if(!$('when').checkValidity()||!$('when').value)throw Error('請輸入 1900–2100 年間的有效日期與時間。');const c=calendar($('when').value,$('roll').value),values=POS.map((_,i)=>Number($('line'+i).value)),p=plate(values,c);current={p,c};$('error').textContent='';$('calendar').innerHTML=[['年柱',c.year],['月柱',c.month],['日柱',c.day],['時柱',c.time]].map(([label,v])=>`<div class="pillar"><span>${label}</span><strong>${v}</strong></div>`).join('')+`<div class="calendar-meta"><span class="calendar-date">曆日農曆 ${c.lunar}<small>國曆 ${c.civilDate} · 午夜 00:00 換日</small></span><span>旬空 ${c.empty.map(z=>Z[z]).join('、')}</span><span>月建 ${Z[c.m]} · 日辰 ${Z[c.d]}</span></div><div class="rollover-note ${c.shifted?'is-shifted':''}"><strong>${c.roll==='23'?'子初 23:00 換日':'午夜 00:00 換日'}</strong><span>${c.shifted?`已採次日排盤：${c.adoptedDate}（農曆 ${c.adoptedLunar}）`:'排盤採用日與曆日相同'}</span><small>日柱、時干、旬空與六獸依此換日規則；年柱、月柱仍按實際節氣交接。</small></div>`;
-$('hex-title').textContent=p.hex.name+(p.bits!==p.changed?' → '+p.to.name:' · 靜卦');$('hex-meta').textContent=`${p.hex.palace}宮・${E[p.hex.element]}　${p.hex.stage}　｜　世身 ${POS[p.shen]}　卦身 ${Z[p.body]}${p.rows.some(r=>r.z===p.body)?'（上卦）':'（不上卦）'}`;$('question').textContent=$('subject').value.trim();
-$('plate').innerHTML=[...p.rows].reverse().map(r=>`<tr><td class="cell-position"><small>${POS[r.i]}</small><span class="beast">${r.beast}</span></td><td class="cell-hidden" data-label="伏神">${r.fu?`<div>${desc(r.fu)}</div><small>月 ${phase(r.fu.e,c.m)}／日 ${phase(r.fu.e,c.d)}</small>`:'<span class="faint">—</span>'}</td><td class="cell-original" data-label="本卦 · 納甲六親"><div class="line-main">${glyph(r.yang,r.moving)}<strong>${desc(r)}</strong></div><div class="tags">${r.tags.map(tag).join('')}</div></td><td class="cell-phase" data-label="十二長生"><div class="phase"><small>月</small>${phase(r.e,c.m)}</div><div class="phase"><small>日</small>${phase(r.e,c.d)}</div></td><td data-label="變卦 · 納甲六親" class="cell-changed ${r.moving?'changed':''}">${p.bits!==p.changed?`${glyph(r.after.yang)}${desc(r.after)}<small>月 ${phase(r.after.e,c.m)}／日 ${phase(r.after.e,c.d)}${r.moving?'':' · 非動爻'}</small>`:'<span class="faint">—</span>'}</td><td class="cell-transform" data-label="動變標注"><div class="tags">${r.trans.length?r.trans.map(tag).join(''):'<span class="faint">—</span>'}</div></td></tr>`).join('');
-let previous=$('target').value;$('target').innerHTML='<option value="">不指定用神</option>'+p.rows.map(r=>`<option value="r${r.i}">${POS[r.i]} · ${desc(r)}</option>`).join('')+p.rows.filter(r=>r.fu).map(r=>`<option value="f${r.i}">${POS[r.i]}伏神 · ${desc(r.fu)}</option>`).join('');if([...$('target').options].some(o=>o.value===previous))$('target').value=previous;roles();structure();scheduleTableFit();}catch(e){$('error').textContent=e.message;}}
-function roles(){let {p}=current,v=$('target').value;if(!v){$('roles').innerHTML='<p class="hint">選擇本卦爻或伏神，即可查看原神、忌神與仇神。</p>';return}let r=p.rows[Number(v.slice(1))],t=v[0]==='f'?r.fu:r;let all=p.rows.flatMap(r=>[{...r,location:POS[r.i]},...(r.fu?[{...r.fu,location:POS[r.i]+'伏神'}]:[])]),ke=(t.e+3)%5,yuan=(t.e+4)%5,chou=(ke+4)%5;$('roles').innerHTML=[['用神',t.e],['原神',yuan],['忌神',ke],['仇神',chou]].map(([name,e])=>`<div class="role"><strong>${name} · ${E[e]}</strong><span>${name==='用神'?(v[0]==='f'?POS[r.i]+'伏神':POS[r.i])+' '+t.kin:all.filter(x=>x.e===e).map(x=>x.location+' '+x.kin).join('、')||'不現'}</span></div>`).join('');}
-function structure(){let {p,c}=current;let out=[];function add(title,sub){out.push(`<div class="structure-row">${title}${sub?`<small>${sub}</small>`:''}</div>`)}const special=rows=>{let x=[0,1,2].map(i=>[rows[i].z,rows[i+3].z]);return x.every(([a,b])=>clash(a,b))?'六沖':x.every(([a,b])=>combine(a,b))?'六合':'無六合／六沖標記'};add(`本卦：${special(p.rows)}`,p.bits!==p.changed?'變卦：'+special(p.rows.map(r=>r.after)):'無動爻，未形成變卦');if(p.rows.some(r=>r.moving)){let moving=p.rows.filter(r=>r.moving);if(moving.every(r=>r.z===r.after.z))add('動爻納支：伏吟','僅依發動爻變前後同支標記');if(moving.every(r=>clash(r.z,r.after.z)))add('動爻納支：反吟','僅依發動爻變前後相沖標記');}
-p.rows.filter(r=>r.fu).forEach(r=>{let f=r.fu;let rel=r.e===f.e?'飛伏比和':generates(r.e,f.e)?'飛生伏':controls(r.e,f.e)?'飛克伏':generates(f.e,r.e)?'伏生飛':'伏克飛';add(POS[r.i]+' · '+rel,`飛神 ${desc(r)} ／ 伏神 ${desc(f)}`)});if(!p.rows.some(r=>r.fu))add('六親俱全','依缺親取伏法，無須另列伏神');let sources=[{z:c.m,n:'月建'},{z:c.d,n:'日辰'},...p.rows.filter(r=>r.moving).map(r=>({z:r.z,n:POS[r.i]}))];[[11,3,7,'木'],[2,6,10,'火'],[5,9,1,'金'],[8,0,4,'水']].forEach(a=>{if(a.slice(0,3).every(z=>sources.some(s=>s.z===z)))add(`${a.slice(0,3).map(z=>Z[z]).join('')} 三合${a[3]} · 支齊備`,'僅標構成地支，不判定是否成局')});$('structure').innerHTML=out.join('');}
-$('reference').innerHTML='<thead><tr><th>五行</th>'+ST.map(s=>`<th>${s}</th>`).join('')+'</tr></thead><tbody>'+[[0,'木'],[1,'火'],[3,'金'],[4,'水、土']].map(([e,n])=>'<tr><td class="reference-element">'+n+'</td>'+ST.map((s,i)=>`<td data-label="${s}">${Z[([11,2,8,5,8][e]+i)%12]}</td>`).join('')+'</tr>').join('')+'</tbody>';
-$('random-cast').onclick=()=>{
- try{
-  if(!$('when').checkValidity()||!$('when').value)throw Error('請先輸入有效的占卦時間。');
-  calendar($('when').value,$('roll').value);
-  const values=LY.randomCast();
-  values.forEach((v,i)=>{$('line'+i).value=String(v)});
-  $('target').value='';
+(function(){
+  const {calendar,plate,randomCast,ST,ZE,E,kin,relation}=LY;
+  const inputRoot=document.querySelector('#inputs');
+  const values=[7,8,7,8,7,8];
+  const options=[[6,'老陰'],[7,'少陽'],[8,'少陰'],[9,'老陽']];
+
+  function optionMarkup(selected){return options.map(([value,label])=>`<option value="${value}"${value===selected?' selected':''}>${label}</option>`).join('');}
+  function setupInputs(){
+    inputRoot.innerHTML=values.map((value,index)=>`<label>${index===0?'初爻':index===5?'上爻':`${['二','三','四','五'][index-1]}爻`}<select data-line="${index}" aria-label="第 ${index+1} 爻">${optionMarkup(value)}</select></label>`).join('');
+    inputRoot.addEventListener('change',event=>{if(event.target.matches('select'))values[Number(event.target.dataset.line)]=Number(event.target.value);});
+  }
+  function calendarMarkup(c){
+    const items=[['曆日',c.lunar],['排盤採用日',c.adoptedLunar],['年柱',c.year],['月柱',c.month],['日柱',c.day],['時柱',c.time],['旬空',c.empty.map(z=>Z[z]).join('、')]];
+    return `<div class="calendar-grid">${items.map(([label,value])=>`<div><span>${label}</span><strong>${value}</strong></div>`).join('')}</div>`;
+  }
+  function lineMarkup(row){
+    const cls=`line ${row.yang?'yang':'yin'}${row.moving?' moving':''}`;
+    return `<div class="${cls}"><i></i>${row.yang?'':'<i></i>'}</div>`;
+  }
+  function rowMarkup(row){
+    const tags=row.tags.length?`<div class="tags">${row.tags.join(' · ')}</div>`:'';
+    const transformed=row.moving?`${row.after.gan}${Z[row.after.z]} ${row.after.kin}`:'—';
+    return `<tr><td class="row-label"><strong>${row.beast}</strong><small>${['初爻','二爻','三爻','四爻','五爻','上爻'][row.i]}</small>${tags}</td><td>${row.fu?`${row.fu.gan}${Z[row.fu.z]}<br>${row.fu.kin}`:'—'}</td><td class="line-cell">${lineMarkup(row)}<small>${row.gan}${Z[row.z]} · ${row.kin}</small></td><td>${ST[LY.phase(row.e,window.currentCalendar.m)]}<br><small>${ST[LY.phase(row.e,window.currentCalendar.d)]}</small></td><td class="line-cell">${row.moving?lineMarkup(row.after):'—'}<small>${transformed}</small></td><td>${row.moving?(row.trans.length?row.trans.join('<br>'):'動'):'—'}</td></tr>`;
+  }
+  function renderDetails(result){
+    const rows=result.rows.slice().reverse();
+    document.querySelector('#hex-title').textContent=`${result.hex.name} → ${result.to.name}`;
+    document.querySelector('#hex-meta').textContent=`${result.hex.stage} · ${result.hex.palace} ${E[result.hex.element]}宮`;
+    document.querySelector('#plate').innerHTML=rows.map(rowMarkup).join('');
+    document.querySelector('#roles').innerHTML=rows.map(row=>`<div class="role-row"><span>${row.beast} ${row.kin}</span><strong>${relation(result.hex.element,row.e)}</strong></div>`).join('');
+    document.querySelector('#structure').innerHTML=`<p>本卦：${result.hex.stage}</p><p>世爻：${result.rows[result.hex.shi].beast} · 應爻：${result.rows[(result.hex.shi+3)%6].beast}</p><p>世身：${result.rows[result.shen].beast} · 卦身：${Z[result.body]}</p>`;
+  }
+  function render(){
+    const when=document.querySelector('#when').value;
+    if(!when){document.querySelector('#error').textContent='請先選擇占卦時間。';return;}
+    try{
+      const c=calendar(when,document.querySelector('#roll').value);window.currentCalendar=c;
+      document.querySelector('#calendar').innerHTML=calendarMarkup(c);
+      document.querySelector('#question').textContent=document.querySelector('#subject').value.trim();
+      renderDetails(plate(values,c,document.querySelector('#target').value));
+      document.querySelector('#error').textContent='';
+      document.querySelector('#cast-status').textContent='排盤已更新';
+    }catch(error){document.querySelector('#error').textContent=error.message;}
+  }
+  function setNow(){
+    const now=new Date();const pad=value=>String(value).padStart(2,'0');
+    document.querySelector('#when').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  }
+  function populateTarget(){
+    document.querySelector('#target').innerHTML=['不指定用神','兄弟','子孫','妻財','官鬼','父母'].map(value=>`<option value="${value}">${value}</option>`).join('');
+  }
+  function populateReference(){
+    document.querySelector('#reference').innerHTML=`<thead><tr><th>階段</th>${Z.split('').map(z=>`<th>${z}</th>`).join('')}</tr></thead><tbody>${ST.map((stage,index)=>`<tr><th>${stage}</th>${Z.split('').map((z,zIndex)=>`<td>${ST[(zIndex-index+12)%12]===stage?'●':''}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  }
+  setupInputs();populateTarget();populateReference();setNow();
+  document.querySelector('#now').addEventListener('click',()=>{setNow();render();});
+  document.querySelector('#random-cast').addEventListener('click',()=>{randomCast().forEach((value,index)=>values[index]=value);setupInputs();render();});
+  document.querySelector('#cast').addEventListener('click',render);
+  document.querySelector('#roll').addEventListener('change',render);
+  document.querySelector('#target').addEventListener('change',render);
   render();
-  $('cast-status').textContent=`已起卦 · ${values.filter(v=>v===6||v===9).length} 個動爻（每爻獨立 2/8）`;
- }catch(e){$('error').textContent=e.message;}
-};
-$('cast').onclick=render;$('now').onclick=()=>{now();render()};$('target').onchange=roles;$('roll').onchange=render;$('when').onchange=render;POS.forEach((_,i)=>$('line'+i).onchange=()=>{$('cast-status').textContent='';render()});$('subject').oninput=()=>{$('question').textContent=$('subject').value.trim()};now();render();
-window.addEventListener('resize',scheduleTableFit);
-document.querySelector('.reference').addEventListener('toggle',scheduleTableFit);
-if(document.fonts)document.fonts.ready.then(scheduleTableFit);
-if('ResizeObserver' in window){
-  const widths=new WeakMap();
-  const observer=new ResizeObserver(entries=>{
-    let resized=false;
-    for(const entry of entries){
-      const width=entry.contentRect.width;
-      if(widths.get(entry.target)!==width){widths.set(entry.target,width);resized=true;}
-    }
-    if(resized)scheduleTableFit();
-  });
-  document.querySelectorAll('.plate-panel>.table-wrap,.reference>.table-wrap').forEach(wrap=>observer.observe(wrap));
-}
+})();
