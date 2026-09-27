@@ -17,10 +17,10 @@ function calendarDates(solar,lunar,hour,roll){
 function plate(values,c,target){let bits=values.reduce((n,v,i)=>n|((v%2)<<i),0),changed=values.reduce((n,v,i)=>n|(((v===6||v===9)?1-v%2:v%2)<<i),0),hex=HEX[bits],to=HEX[changed],rows=lines(bits,hex.element),after=lines(changed,hex.element),pure=lines(hex.pure,hex.element),missing=['兄弟','子孫','妻財','官鬼','父母'].filter(k=>!rows.some(r=>r.kin===k)),start=[0,0,1,1,2,3,4,4,5,5][c.g],body=((rows[hex.shi].yang?0:6)+hex.shi)%12,shen=rows[hex.shi].z%6;
 rows.forEach((r,i)=>{r.moving=values[i]===6||values[i]===9;r.after=after[i];r.beast=['青龍','朱雀','勾陳','螣蛇','白虎','玄武'][(start+i)%6];r.tags=[];if(i===hex.shi)r.tags.push('世');if(i===(hex.shi+3)%6)r.tags.push('應');if(i===shen)r.tags.push('世身');if(r.z===body)r.tags.push('卦身');if(i>Math.min(hex.shi,(hex.shi+3)%6)&&i<Math.max(hex.shi,(hex.shi+3)%6))r.tags.push('間爻');if(c.empty.includes(r.z))r.tags.push('旬空');if(clash(r.z,c.m))r.tags.push('月破');if(clash(r.z,c.d))r.tags.push('日沖');if(combine(r.z,c.m))r.tags.push('月合');if(combine(r.z,c.d))r.tags.push('日合');if(phase(r.e,c.m)==='墓')r.tags.push('入月墓');if(phase(r.e,c.d)==='墓')r.tags.push('入日墓');r.fu=missing.includes(pure[i].kin)?pure[i]:null;r.trans=[];if(r.moving){let b=after[i];if(generates(b.e,r.e))r.trans.push('回頭生');if(controls(b.e,r.e))r.trans.push('回頭克');if(clash(b.z,r.z))r.trans.push('回頭沖');if(combine(b.z,r.z))r.trans.push('回頭合');let advances=[[11,0],[2,3],[5,6],[8,9],[1,4],[4,7],[7,10],[10,1]];if(advances.some(([a,x])=>a===r.z&&x===b.z))r.trans.push('進神');if(advances.some(([a,x])=>x===r.z&&a===b.z))r.trans.push('退神');r.trans.push('化'+phase(r.e,b.z));if(c.empty.includes(b.z))r.trans.push('化空');if(clash(b.z,c.m))r.trans.push('化月破');if(clash(b.z,c.d))r.trans.push('化日沖');if(b.z===r.z)r.trans.push('伏吟');}});
 return {bits,changed,hex,to,rows,body,shen};}
-// Uniform 4-bit draw: 老陰/老陽 each 3/16, 少陽/少陰 each 5/16.
+// Uniform 4-bit draw: 老陰/老陽 each 2/16, 少陽/少陰 each 6/16.
 function valueFromDraw(draw){
   if(!Number.isInteger(draw)||draw<0||draw>15)throw Error('抽樣值須介於 0–15');
-  return draw<3?6:draw<6?9:draw<11?7:8;
+  return draw<2?6:draw<4?9:draw<10?7:8;
 }
 function randomCast(){
   const bytes=new Uint8Array(6);
