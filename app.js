@@ -4,9 +4,14 @@ let tableFitFrame=0;
 function fitTables(){
   tableFitFrame=0;
   document.querySelectorAll('.plate-panel>.table-wrap,.reference>.table-wrap').forEach(wrap=>{
-    const available=wrap.clientWidth;
     const table=wrap.querySelector('table');
-    if(!table||available<=0)return;
+    if(!table)return;
+    // Keep the fitting rules with the fitting code, including when an older
+    // style.css is still cached. An unscaled table must not size its wrapper.
+    Object.assign(wrap.style,{position:'relative',minWidth:'0',maxWidth:'100%',overflow:'hidden'});
+    Object.assign(table.style,{position:'absolute',left:'0',top:'0',margin:'0',transformOrigin:'top left',transform:'none'});
+    const available=wrap.clientWidth;
+    if(available<=0)return;
     table.style.width=Math.max(660,available)+'px';
     // offset/scroll dimensions are unscaled; measure again after every render.
     const naturalWidth=Math.max(table.offsetWidth,table.scrollWidth);
@@ -14,6 +19,8 @@ function fitTables(){
     const scale=Math.min(1,available/naturalWidth);
     table.style.transform=scale<1?`scale(${scale})`:'none';
     wrap.style.height=Math.ceil(Math.max(table.offsetHeight,table.scrollHeight)*scale)+'px';
+    wrap.scrollLeft=0;
+    wrap.scrollTop=0;
   });
 }
 function scheduleTableFit(){

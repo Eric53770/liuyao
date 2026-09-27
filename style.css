@@ -3,3 +3,33 @@
 .calendar-date small{display:block;font-size:12px;color:#b5c8cc;margin-top:3px}.rollover-note{grid-column:1/-1;display:flex;gap:5px 16px;flex-wrap:wrap;border-top:1px solid #ffffff20;padding-top:12px;font-size:13px;color:#d4e2e3}.rollover-note strong{font-weight:500;color:#fff}.rollover-note small{flex-basis:100%;font-size:12px;color:#b5c8cc;line-height:1.7}.rollover-note.is-shifted{border-radius:4px;background:#ffffff0d;padding:12px;border:1px solid #ffffff30}.calendar-date,.rollover-note span{overflow-wrap:anywhere}
 
 .random-button{width:100%;background:#eaf4f3;color:#155e5c;border:1px solid #aacdca;border-radius:5px;padding:11px 16px;font-weight:600;font-size:15px;margin-top:4px}.random-button:hover{background:#d7ebe9}.random-hint{font-size:12px;text-align:center;margin:7px 0 16px}.cast-status{font-size:13px;color:var(--teal);margin:8px 0;line-height:1.7}.cast-status:empty{display:none}
+
+/* Preserve the desktop table on every screen; app.js fits its entire width. */
+.results{container:results / inline-size}
+.plate-panel>.table-wrap,.reference>.table-wrap{max-width:100%;min-width:0;overflow:hidden}
+.plate,.reference table{transform-origin:top left}
+.plate{min-width:660px;table-layout:fixed}
+.plate th:nth-child(1){width:11%}.plate th:nth-child(2){width:13%}
+.plate th:nth-child(3){width:24%}.plate th:nth-child(4){width:11%}
+.plate th:nth-child(5){width:23%}.plate th:nth-child(6){width:18%}
+.plate .line-main,.plate .phase{white-space:nowrap}
+.plate td{overflow-wrap:break-word}
+.reference>.table-wrap{margin-top:16px}.reference table{margin-top:0}
+.workspace>*,.results>*,.lower>*{min-width:0}button,input,select{min-height:44px}.text-button{min-height:44px}.plate-heading>div{min-width:0}.plate-heading h2,.plate-heading p,#question{overflow-wrap:anywhere}.legend{flex-wrap:wrap}.reference .table-wrap{max-width:100%;overscroll-behavior-x:contain}.reference summary{min-height:28px}
+@container results (max-width:53rem){
+ .plate th{padding:12px 6px}
+ .plate td{padding:14px 6px}
+ .plate th:first-child,.plate td:first-child{padding-left:10px}
+ .plate .glyph{width:36px;height:7px;margin-right:6px}
+ .plate .tags{gap:4px}
+ .plate .tag{font-size:12px;padding:1px 4px}
+}
+@media(min-width:761px) and (max-width:1000px){
+ .workspace{grid-template-columns:1fr}.setup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 24px;align-items:start}.setup>*{grid-column:1}.setup .section-title:first-child{grid-column:1/-1}.setup .compact{grid-column:2;grid-row:2;margin-top:0}.setup .compact+.hint{grid-column:2;grid-row:3}.setup .random-button{grid-column:2;grid-row:4}.setup .random-hint{grid-column:2;grid-row:5}.setup #inputs{grid-column:2;grid-row:6/12}.setup .rules{margin-top:12px}.setup .primary{margin-top:8px}.setup #cast-status{grid-column:2}.lower{grid-template-columns:1fr 1fr}.intro p{display:block;font-size:13px;max-width:260px}
+}
+@media(max-width:760px){
+ input,select{font-size:16px;max-width:100%}.inline{flex-wrap:wrap;gap:8px}.inline select{font-size:14px;min-width:170px;padding:9px}.text-button{font-size:14px}.line-input label{font-size:14px;min-width:38px}.line-input{gap:14px}.panel{padding:18px}.plate-panel{padding:0}.plate-heading{gap:12px}.calendar-meta{gap:9px 16px}.rollover-note{gap:7px}.lower{grid-template-columns:1fr}.role{flex-wrap:wrap}.role>span{text-align:left}.reference summary span{float:none;margin-left:12px}.setup label span{float:none;display:inline-block;margin-left:8px}.motto{line-height:1.9}.header-note{display:none}
+}
+@media(max-width:400px){
+ header{padding:0 14px}.brand{gap:10px;letter-spacing:2px}.brand small{margin-left:6px;letter-spacing:1px}main{padding:20px 12px}.intro h1{font-size:23px;letter-spacing:1px}.calendar{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pillar:nth-child(2){border-right:0}.pillar:nth-child(3),.pillar:nth-child(4){border-top:1px solid #ffffff20;padding-top:8px}.calendar-meta,.rollover-note{grid-column:1/-1}.plate-heading h2{font-size:21px}.legend{font-size:12px;gap:8px 14px}.reference{padding:16px 12px}
+}
