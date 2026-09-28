@@ -26,7 +26,7 @@ function fitTables(){
 function scheduleTableFit(){
   if(!tableFitFrame)tableFitFrame=requestAnimationFrame(fitTables);
 }
-$('inputs').innerHTML=[5,4,3,2,1,0].map(i=>`<div class="line-input"><label for="line${i}">${POS[i]}</label><select id="line${i}"><option value="7">7　少陽 ━　靜爻</option><option value="8">8　少陰 ⚋　靜爻</option><option value="9">9　老陽　動爻</option><option value="6">6　老陰　動爻</option></select></div>`).join('');
+$('inputs').innerHTML=[5,4,3,2,1,0].map(i=>`<div class="line-input"><label for="line${i}">${POS[i]}</label><select id="line${i}"><option value="7">少陽　靜爻</option><option value="8">少陰　靜爻</option><option value="9">老陽　動爻</option><option value="6">老陰　動爻</option></select></div>`).join('');
 function now(){let parts=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());$('when').value=parts.replace(' ','T');}
 const tag=t=>`<span class="tag ${['世','應'].includes(t)?'key':/空|破|墓/.test(t)?'warn':''}">${t}</span>`;
 const glyph=(yang,active=false)=>`<span class="glyph ${yang?'':'yin'} ${active?'active':''}" aria-label="${yang?'陽':'陰'}爻"></span>`;
