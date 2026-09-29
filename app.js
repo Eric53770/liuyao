@@ -1,6 +1,7 @@
 const $=id=>document.getElementById(id),{Z,E,ZE,ST,HEX,phase,calendar,plate,generates,controls,clash,combine,relation}=LY;
 const POS=['初爻','二爻','三爻','四爻','五爻','上爻'];let current;
 let tableFitFrame=0;
+let exportingImage=false,previewImageUrl='';
 function fitTables(){
   tableFitFrame=0;
   document.querySelectorAll('.plate-panel>.table-wrap,.reference>.table-wrap').forEach(wrap=>{
@@ -35,11 +36,10 @@ const desc=r=>`${r.kin} ${Z[r.z]}<span class="element element-${E[r.e]}">${E[r.e
 function render(){try{if(!$('when').checkValidity()||!$('when').value)throw Error('請輸入 1900–2100 年間的有效日期與時間。');const c=calendar($('when').value,$('roll').value),values=POS.map((_,i)=>Number($('line'+i).value)),p=plate(values,c);current={p,c};$('error').textContent='';$('calendar').innerHTML=[['年柱',c.year],['月柱',c.month],['日柱',c.day],['時柱',c.time]].map(([label,v])=>`<div class="pillar"><span>${label}</span><strong>${v}</strong></div>`).join('')+`<div class="calendar-meta"><span class="calendar-date">曆日農曆 ${c.lunar}<small>國曆 ${c.civilDate} · 午夜 00:00 換日</small></span><span>旬空 ${c.empty.map(z=>Z[z]).join('、')}</span><span>月建 ${Z[c.m]} · 日辰 ${Z[c.d]}</span></div><div class="rollover-note ${c.shifted?'is-shifted':''}"><strong>${c.roll==='23'?'子初 23:00 換日':'午夜 00:00 換日'}</strong><span>${c.shifted?`已採次日排盤：${c.adoptedDate}（農曆 ${c.adoptedLunar}）`:'排盤採用日與曆日相同'}</span><small>日柱、時干、旬空與六獸依此換日規則；年柱、月柱仍按實際節氣交接。</small></div>`;
 $('hex-title').textContent=p.hex.name+(p.bits!==p.changed?' → '+p.to.name:' · 靜卦');$('hex-meta').textContent=`${p.hex.palace}宮・${E[p.hex.element]}　${p.hex.stage}　｜　世身 ${POS[p.shen]}　卦身 ${Z[p.body]}${p.rows.some(r=>r.z===p.body)?'（上卦）':'（不上卦）'}`;$('question').textContent=$('subject').value.trim();
 $('plate').innerHTML=[...p.rows].reverse().map(r=>`<tr><td class="cell-position"><small>${POS[r.i]}</small><span class="beast">${r.beast}</span></td><td class="cell-hidden" data-label="伏神">${r.fu?`<div>${desc(r.fu)}</div><small>月 ${phase(r.fu.e,c.m)}／日 ${phase(r.fu.e,c.d)}</small>`:'<span class="faint">—</span>'}</td><td class="cell-original" data-label="本卦 · 納甲六親"><div class="line-main">${glyph(r.yang,r.moving)}<strong>${desc(r)}</strong></div><div class="tags">${r.tags.map(tag).join('')}</div></td><td class="cell-phase" data-label="十二長生"><div class="phase"><small>月</small>${phase(r.e,c.m)}</div><div class="phase"><small>日</small>${phase(r.e,c.d)}</div></td><td data-label="變卦 · 納甲六親" class="cell-changed ${r.moving?'changed':''}">${p.bits!==p.changed?`${glyph(r.after.yang)}${desc(r.after)}<small>月 ${phase(r.after.e,c.m)}／日 ${phase(r.after.e,c.d)}${r.moving?'':' · 非動爻'}</small>`:'<span class="faint">—</span>'}</td><td class="cell-transform" data-label="動變標注"><div class="tags">${r.trans.length?r.trans.map(tag).join(''):'<span class="faint">—</span>'}</div></td></tr>`).join('');
-let previous=$('target').value;$('target').innerHTML='<option value="">不指定用神</option>'+p.rows.map(r=>`<option value="r${r.i}">${POS[r.i]} · ${descText(r)}</option>`).join('')+p.rows.filter(r=>r.fu).map(r=>`<option value="f${r.i}">${POS[r.i]}伏神 · ${descText(r.fu)}</option>`).join('');if([...$('target').options].some(o=>o.value===previous))$('target').value=previous;roles();structure();scheduleTableFit();}catch(e){$('error').textContent=e.message;}}
-function roles(){let {p}=current,v=$('target').value;if(!v){$('roles').innerHTML='<p class="hint">選擇本卦爻或伏神，即可查看原神、忌神與仇神。</p>';return}let r=p.rows[Number(v.slice(1))],t=v[0]==='f'?r.fu:r;let all=p.rows.flatMap(r=>[{...r,location:POS[r.i]},...(r.fu?[{...r.fu,location:POS[r.i]+'伏神'}]:[])]),ke=(t.e+3)%5,yuan=(t.e+4)%5,chou=(ke+4)%5;$('roles').innerHTML=[['用神',t.e],['原神',yuan],['忌神',ke],['仇神',chou]].map(([name,e])=>`<div class="role"><strong>${name} · ${E[e]}</strong><span>${name==='用神'?(v[0]==='f'?POS[r.i]+'伏神':POS[r.i])+' '+t.kin:all.filter(x=>x.e===e).map(x=>x.location+' '+x.kin).join('、')||'不現'}</span></div>`).join('');}
+let previous=$('target').value;$('target').innerHTML='<option value="">不指定用神</option>'+p.rows.map(r=>`<option value="r${r.i}">${POS[r.i]} · ${descText(r)}</option>`).join('')+p.rows.filter(r=>r.fu).map(r=>`<option value="f${r.i}">${POS[r.i]}伏神 · ${descText(r.fu)}</option>`).join('');if([...$('target').options].some(o=>o.value===previous))$('target').value=previous;roles();structure();scheduleTableFit();$('export-image').disabled=exportingImage;return true;}catch(e){current=null;$('export-image').disabled=true;$('error').textContent=e.message;return false;}}
+function roles(){if(!current)return;let {p}=current,v=$('target').value;if(!v){$('roles').innerHTML='<p class="hint">選擇本卦爻或伏神，即可查看原神、忌神與仇神。</p>';return}let r=p.rows[Number(v.slice(1))],t=v[0]==='f'?r.fu:r;let all=p.rows.flatMap(r=>[{...r,location:POS[r.i]},...(r.fu?[{...r.fu,location:POS[r.i]+'伏神'}]:[])]),ke=(t.e+3)%5,yuan=(t.e+4)%5,chou=(ke+4)%5;$('roles').innerHTML=[['用神',t.e],['原神',yuan],['忌神',ke],['仇神',chou]].map(([name,e])=>`<div class="role"><strong>${name} · ${E[e]}</strong><span>${name==='用神'?(v[0]==='f'?POS[r.i]+'伏神':POS[r.i])+' '+t.kin:all.filter(x=>x.e===e).map(x=>x.location+' '+x.kin).join('、')||'不現'}</span></div>`).join('');}
 function structure(){let {p,c}=current;let out=[];function add(title,sub){out.push(`<div class="structure-row">${title}${sub?`<small>${sub}</small>`:''}</div>`)}const special=rows=>{let x=[0,1,2].map(i=>[rows[i].z,rows[i+3].z]);return x.every(([a,b])=>clash(a,b))?'六沖':x.every(([a,b])=>combine(a,b))?'六合':'無六合／六沖標記'};add(`本卦：${special(p.rows)}`,p.bits!==p.changed?'變卦：'+special(p.rows.map(r=>r.after)):'無動爻，未形成變卦');if(p.rows.some(r=>r.moving)){let moving=p.rows.filter(r=>r.moving);if(moving.every(r=>r.z===r.after.z))add('動爻納支：伏吟','僅依發動爻變前後同支標記');if(moving.every(r=>clash(r.z,r.after.z)))add('動爻納支：反吟','僅依發動爻變前後相沖標記');}
 p.rows.filter(r=>r.fu).forEach(r=>{let f=r.fu;let rel=r.e===f.e?'飛伏比和':generates(r.e,f.e)?'飛生伏':controls(r.e,f.e)?'飛克伏':generates(f.e,r.e)?'伏生飛':'伏克飛';add(POS[r.i]+' · '+rel,`飛神 ${desc(r)} ／ 伏神 ${desc(f)}`)});if(!p.rows.some(r=>r.fu))add('六親俱全','依缺親取伏法，無須另列伏神');let sources=[{z:c.m,n:'月建'},{z:c.d,n:'日辰'},...p.rows.filter(r=>r.moving).map(r=>({z:r.z,n:POS[r.i]}))];[[11,3,7,'木'],[2,6,10,'火'],[5,9,1,'金'],[8,0,4,'水']].forEach(a=>{if(a.slice(0,3).every(z=>sources.some(s=>s.z===z)))add(`${a.slice(0,3).map(z=>Z[z]).join('')} 三合${a[3]} · 支齊備`,'僅標構成地支，不判定是否成局')});$('structure').innerHTML=out.join('');}
-$('reference').innerHTML='<thead><tr><th>五行</th>'+ST.map(s=>`<th>${s}</th>`).join('')+'</tr></thead><tbody>'+[[0,'木'],[1,'火'],[3,'金'],[4,'水、土']].map(([e,n])=>'<tr><td class="reference-element">'+n+'</td>'+ST.map((s,i)=>`<td data-label="${s}">${Z[([11,2,8,5,8][e]+i)%12]}</td>`).join('')+'</tr>').join('')+'</tbody>';
 $('random-cast').onclick=()=>{
  try{
   if(!$('when').checkValidity()||!$('when').value)throw Error('請先輸入有效的占卦時間。');
@@ -48,12 +48,49 @@ $('random-cast').onclick=()=>{
   values.forEach((v,i)=>{$('line'+i).value=String(v)});
   $('target').value='';
   render();
-  $('cast-status').textContent=`已起卦 · ${values.filter(v=>v===6||v===9).length} 個動爻（每爻獨立 2/8）`;
  }catch(e){$('error').textContent=e.message;}
 };
-$('cast').onclick=render;$('now').onclick=()=>{now();render()};$('target').onchange=roles;$('roll').onchange=render;$('when').onchange=render;POS.forEach((_,i)=>$('line'+i).onchange=()=>{$('cast-status').textContent='';render()});$('subject').oninput=()=>{$('question').textContent=$('subject').value.trim()};now();render();
+$('export-image').onclick=async()=>{
+ if(exportingImage)return;
+ // Revalidate and take one snapshot before asynchronous image encoding.
+ if(!render())return;
+ const snapshot={
+  ...current,
+  when:$('when').value,
+  subject:$('subject').value.trim(),
+  title:$('hex-title').textContent,
+  meta:$('hex-meta').textContent,
+  target:$('target').selectedOptions[0].textContent,
+  roles:[...$('roles').querySelectorAll('.role')].map(el=>({label:el.querySelector('strong').textContent,detail:el.querySelector('span').textContent})),
+  structure:[...$('structure').children].map(el=>({
+   title:[...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent).join('').trim(),
+   detail:el.querySelector('small')?.textContent||''
+  }))
+ };
+ exportingImage=true;
+ $('export-image').disabled=true;
+ $('export-image').setAttribute('aria-busy','true');
+ $('export-status').textContent='正在產生圖片…';
+ try{
+  const blob=await GuanyaoImage.createPNG(snapshot);
+  if(previewImageUrl)URL.revokeObjectURL(previewImageUrl);
+  previewImageUrl=URL.createObjectURL(blob);
+  $('export-preview-image').src=previewImageUrl;
+  $('download-image').href=previewImageUrl;
+  $('download-image').download=`觀爻_${snapshot.when.replace(/[T:]/g,'-')}_${snapshot.p.hex.name}.png`;
+  $('export-preview').showModal();
+  $('export-status').textContent='圖片已產生，可在預覽中下載。';
+ }catch(e){
+  $('export-status').textContent='無法匯出圖片：'+e.message;
+ }finally{
+  exportingImage=false;
+  $('export-image').disabled=!current;
+  $('export-image').removeAttribute('aria-busy');
+ }
+};
+$('close-export').onclick=()=>$('export-preview').close();
+$('now').onclick=()=>{now();render()};$('target').onchange=roles;$('roll').onchange=render;$('when').onchange=render;POS.forEach((_,i)=>$('line'+i).onchange=()=>{$('cast-status').textContent='';render()});$('subject').oninput=()=>{$('question').textContent=$('subject').value.trim()};now();render();
 window.addEventListener('resize',scheduleTableFit);
-document.querySelector('.reference').addEventListener('toggle',scheduleTableFit);
 if(document.fonts)document.fonts.ready.then(scheduleTableFit);
 if('ResizeObserver' in window){
   const widths=new WeakMap();
