@@ -1,11 +1,11 @@
 (()=>{
 'use strict';
 const dialog=$('export-preview'),status=$('image-save-status');
-let prepared=null,busy=false;
+let prepared=null,busy=false,downloadOnly=false;
 function message(text){status.textContent=text;$('export-status').textContent=text;}
 function lock(value){
  busy=value;exportingImage=value;
- ['prepare-jpg','save-jpg-device','upload-google'].forEach(id=>$(id).disabled=value);
+ ['save-jpg-device','upload-google'].forEach(id=>$(id).disabled=value);
  $('export-image').disabled=value||!current;
  dialog.setAttribute('aria-busy',String(value));
 }
@@ -24,19 +24,21 @@ async function preview(){
   previewImageUrl=URL.createObjectURL(blob);
   prepared={blob,name:`觀爻_${snapshot.when.replace(/[T:]/g,'-')}_${snapshot.p.hex.name}.jpg`};
   $('export-preview-image').src=previewImageUrl;
-  $('download-image').href=previewImageUrl;$('download-image').download=prepared.name;
   $('uploaded-image-link').hidden=true;
   dialog.showModal();message('JPG 已產生，請確認圖片後選擇儲存位置。');
  }catch(error){message('無法製作圖片：'+error.message);}
  finally{lock(false);}
 }
-$('export-image').onclick=preview;$('prepare-jpg').onclick=preview;
-$('download-image').onclick=()=>message('已送出 JPG 下載，請在裝置的下載項目確認檔案。');
+$('export-image').onclick=preview;
+function downloadPrepared(){
+ const link=document.createElement('a');link.href=previewImageUrl;link.download=prepared.name;document.body.append(link);link.click();link.remove();
+ message('已送出 JPG 下載，請在裝置的下載項目確認檔案。');
+}
 $('save-jpg-device').onclick=async()=>{
  if(busy||!prepared)return;
  const image=prepared;
- if(!window.isSecureContext||typeof window.showSaveFilePicker!=='function'){
-  $('download-image').click();return;
+ if(downloadOnly||!window.isSecureContext||typeof window.showSaveFilePicker!=='function'){
+  downloadPrepared();return;
  }
  lock(true);
  try{
@@ -44,7 +46,10 @@ $('save-jpg-device').onclick=async()=>{
   const stream=await handle.createWritable();
   try{await stream.write(image.blob);await stream.close();}catch(error){try{await stream.abort();}catch(_){}throw error;}
   message('JPG 已儲存至本機。');
- }catch(error){message(error.name==='AbortError'?'已取消儲存。':'無法儲存：'+error.message+' 請改用「直接下載 JPG」。');}
+ }catch(error){
+  if(error.name==='AbortError')message('已取消儲存。');
+  else{downloadOnly=true;message('無法開啟或寫入選定位置。請再按一次「儲存 JPG 至本機」，改用下載方式。');}
+ }
  finally{lock(false);}
 };
 async function upload(){

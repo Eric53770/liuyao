@@ -8,9 +8,8 @@
 <div class="section-title"><h2 id="save-title">備註與存檔</h2><span>04</span></div>
 <label for="notes">盤面備註</label><textarea id="notes" rows="6" maxlength="50000" placeholder="記錄判讀、後續發展或驗證結果…"></textarea>
 <p class="hint">將盤面與備註一起製成 JPG，可儲存至本機，或登入 Google Drive 直接上傳。</p>
-<button type="button" class="export-button" id="prepare-jpg">預覽與儲存 JPG</button>
 </section>
-</section></div></main><dialog id="export-preview" class="export-preview" aria-labelledby="export-preview-title"><div class="export-preview-header"><h2 id="export-preview-title">排盤圖片</h2><button id="close-export" class="text-button" type="button">關閉</button></div><p class="hint">確認圖片後，選擇儲存位置。手機亦可長按圖片儲存。此預覽包含產生當下的盤面與備註。</p>
-<div class="save-actions"><button id="save-jpg-device" class="export-button" type="button">儲存 JPG 至本機</button><button id="upload-google" class="secondary-button" type="button">登入 Google Drive 並上傳</button><a id="download-image" class="text-button" download>直接下載 JPG</a></div>
+</section></div></main><footer><a href="privacy.html">隱私權政策</a> · <a href="terms.html">服務條款</a> · <a href="mailto:eric53770@gmail.com">聯絡我們</a></footer><dialog id="export-preview" class="export-preview" aria-labelledby="export-preview-title"><div class="export-preview-header"><h2 id="export-preview-title">排盤圖片</h2><button id="close-export" class="text-button" type="button">關閉</button></div><p class="hint">確認圖片後，選擇儲存位置。手機亦可長按圖片儲存。此預覽包含產生當下的盤面與備註。</p>
+<div class="save-actions"><button id="save-jpg-device" class="export-button" type="button">儲存 JPG 至本機</button><button id="upload-google" class="secondary-button" type="button">登入 Google Drive 並上傳</button></div>
 <p id="cloud-availability" class="hint"></p><p class="hint">Google Drive 儲存至「我的雲端硬碟」。僅上傳目前預覽的 JPG。</p><p id="image-save-status" role="status" aria-live="polite"></p><a id="uploaded-image-link" target="_blank" rel="noopener noreferrer" hidden>在 Google Drive 開啟圖片</a>
 <div class="export-preview-content"><img id="export-preview-image" alt="占問事項、六爻排盤與備註"></div></dialog><script src="lunar.js"></script><script src="engine.js"></script><script src="export-image.js"></script><script src="app.js"></script><script src="cloud-config.js"></script><script src="cloud-upload.js"></script><script src="save-image.js"></script></body></html>
