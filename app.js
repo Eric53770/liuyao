@@ -50,13 +50,12 @@ $('random-cast').onclick=()=>{
   render();
  }catch(e){$('error').textContent=e.message;}
 };
-$('export-image').onclick=async()=>{
- if(exportingImage)return;
- // Revalidate and take one snapshot before asynchronous image encoding.
- if(!render())return;
+function captureImageSnapshot(){
+ if(!render())throw Error($('error').textContent);
  const snapshot={
   ...current,
   when:$('when').value,
+  notes:$('notes').value,
   subject:$('subject').value.trim(),
   title:$('hex-title').textContent,
   meta:$('hex-meta').textContent,
@@ -67,27 +66,8 @@ $('export-image').onclick=async()=>{
    detail:el.querySelector('small')?.textContent||''
   }))
  };
- exportingImage=true;
- $('export-image').disabled=true;
- $('export-image').setAttribute('aria-busy','true');
- $('export-status').textContent='正在產生圖片…';
- try{
-  const blob=await GuanyaoImage.createPNG(snapshot);
-  if(previewImageUrl)URL.revokeObjectURL(previewImageUrl);
-  previewImageUrl=URL.createObjectURL(blob);
-  $('export-preview-image').src=previewImageUrl;
-  $('download-image').href=previewImageUrl;
-  $('download-image').download=`觀爻_${snapshot.when.replace(/[T:]/g,'-')}_${snapshot.p.hex.name}.png`;
-  $('export-preview').showModal();
-  $('export-status').textContent='圖片已產生，可在預覽中下載。';
- }catch(e){
-  $('export-status').textContent='無法匯出圖片：'+e.message;
- }finally{
-  exportingImage=false;
-  $('export-image').disabled=!current;
-  $('export-image').removeAttribute('aria-busy');
- }
-};
+ return snapshot;
+}
 $('close-export').onclick=()=>$('export-preview').close();
 $('now').onclick=()=>{now();render()};$('target').onchange=roles;$('roll').onchange=render;$('when').onchange=render;POS.forEach((_,i)=>$('line'+i).onchange=()=>{$('cast-status').textContent='';render()});$('subject').oninput=()=>{$('question').textContent=$('subject').value.trim()};now();render();
 window.addEventListener('resize',scheduleTableFit);

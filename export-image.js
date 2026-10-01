@@ -173,14 +173,27 @@
     a.box(x,lowerTop,panelWidth,y-lowerTop,'#fff');
     a.box(x+panelWidth+gap,lowerTop,panelWidth,y-lowerTop,'#fff');
     roles(a,x,lowerTop);structure(a,x+panelWidth+gap,lowerTop);
-    return Math.ceil(y);
+    if(data.notes){
+      y+=24;
+      const noteTop=y;
+      let noteEnd=measure.text('盤面備註',x+24,y+20,w-48,{size:22,weight:600})+12;
+      noteEnd=measure.text(data.notes,x+24,noteEnd,w-48,{size:20,lineHeight:32})+24;
+      a.box(x,noteTop,w,noteEnd-noteTop,'#fff');
+      const textTop=a.text('盤面備註',x+24,noteTop+20,w-48,{size:22,weight:600})+12;
+      a.text(data.notes,x+24,textTop,w-48,{size:20,lineHeight:32});
+      y=noteEnd;
+    }
+    return Math.ceil(y+MARGIN);
   }
 
-  async function createPNG(data){
+  async function createImage(data,type='image/jpeg'){
     if(document.fonts)await document.fonts.ready;
     const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
     if(!ctx)throw Error('此瀏覽器無法產生圖片，請改用較新的瀏覽器。');
-    const height=report(ctx,data,false),scale=2;
+    const height=report(ctx,data,false);
+    // Bound memory and canvas dimensions without silently clipping notes.
+    const scale=Math.min(2,12000/height,Math.sqrt(16000000/(WIDTH*height)));
+    if(scale<0.8)throw Error('備註過長，無法完整放入一張清晰圖片。請縮短備註後再試。');
     canvas.width=WIDTH*scale;canvas.height=height*scale;
     ctx.scale(scale,scale);
     ctx.fillStyle=C.paper;ctx.fillRect(0,0,WIDTH,height);
@@ -189,8 +202,8 @@
       // Release the large backing buffer after encoding, especially on phones.
       canvas.width=canvas.height=1;
       if(blob)resolve(blob);else reject(Error('圖片產生失敗，請再試一次。'));
-    },'image/png'));
+    },type,0.92));
   }
 
-  root.GuanyaoImage={createPNG};
+  root.GuanyaoImage={createPNG:data=>createImage(data,'image/png'),createJPG:data=>createImage(data,'image/jpeg')};
 })(window);
