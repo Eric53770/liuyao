@@ -71,8 +71,6 @@
     a.text('觀爻 · 六爻排盤',x+60,y,w-60,{size:29,weight:600});
     y+=62;
     a.rule(x,y,w);y+=22;
-    a.text('占問事項',x,y,w,{size:16,color:C.teal,weight:600});y+=32;
-    y=a.text(data.subject||'（未填寫）',x,y,w,{size:25,weight:500,lineHeight:39})+18;
     y=a.text(`占卦時間  ${data.when.replace('T',' ')}  ·  台灣 UTC+8`,x,y,w,{size:17,color:C.muted})+20;
 
     function calendarBlock(q,top){
